@@ -24,6 +24,92 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 /* ════════════════════════════════════════
    LOGIN
 ════════════════════════════════════════ */
+   function getDemoAccounts() {
+  try {
+    return JSON.parse(localStorage.getItem('demoAmbassadors') || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveDemoAccount(account) {
+  const accounts = getDemoAccounts();
+
+  const exists = accounts.some(a =>
+    (a.Email || '').toLowerCase() === (account.Email || '').toLowerCase()
+  );
+
+  if (!exists) {
+    accounts.push(account);
+    localStorage.setItem('demoAmbassadors', JSON.stringify(accounts));
+  }
+}
+
+function createDemoAccount() {
+  const errEl = document.getElementById('loginError');
+  const emailInput = document.getElementById('loginEmail');
+
+  const email = emailInput.value.trim().toLowerCase();
+
+  if (!email) {
+    errEl.textContent = '⚠️ Scrie emailul în câmpul de login, apoi apasă Creează cont demo.';
+    return;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = '⚠️ Email invalid.';
+    return;
+  }
+
+  const alreadyExists = STATE.ambassadors.some(a =>
+    (a.Email || '').toLowerCase() === email
+  );
+
+  if (alreadyExists) {
+    errEl.textContent = 'ℹ️ Contul există deja. Apasă Intră în cont.';
+    return;
+  }
+
+  const nickname = prompt('Nickname:', email.split('@')[0]) || email.split('@')[0];
+  const universitate = prompt('Universitate:', 'Universitate Demo') || 'Universitate Demo';
+  const facultate = prompt('Facultate:', 'Facultate Demo') || 'Facultate Demo';
+  const anStudiu = prompt('An studiu:', '1') || '1';
+
+  const newAccount = {
+    ID_Ambasador: 'DEMO-' + Date.now(),
+    Nickname: nickname,
+    Email: email,
+    Tip: 'George Friend',
+    Status: 'Activ',
+    Universitate: universitate,
+    Facultate: facultate,
+    An_Studiu: anStudiu,
+    CJ_Publisher_ID: 'CJ-DEMO-' + Date.now(),
+    Link_Unic: 'https://bcr.ro/george?ref=DEMO' + Date.now(),
+    Data_Inscriere: new Date().toLocaleDateString('ro-RO'),
+    Ambasador_Permanent_Supervizor: '',
+    Total_Conturi_Generate: 0,
+    Total_XP: 0,
+    Level: 'Rookie'
+  };
+
+  saveDemoAccount(newAccount);
+
+  const processed = processAmbassadors([...STATE.ambassadors, newAccount]);
+
+  STATE.ambassadors = processed;
+  STATE.universities = buildUniData(processed);
+  STATE.faculties = buildFacData(processed);
+  STATE.loggedEmail = email;
+  STATE.isAdmin = ADMIN_EMAILS.includes(email);
+  STATE.me = processed.find(a => (a.Email || '').toLowerCase() === email) || null;
+
+  errEl.textContent = '✅ Cont demo creat. Se intră în aplicație...';
+
+  setTimeout(() => {
+    doLogin();
+  }, 600);
+}
 #login-screen{position:fixed;inset:0;background:linear-gradient(160deg,#0D2590 0%,#1A3FCB 55%,#4B6EF5 100%);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
 #login-screen::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
 .login-box{background:rgba(255,255,255,.08);backdrop-filter:blur(24px);border:1.5px solid rgba(255,255,255,.15);border-radius:28px;padding:40px 32px;width:100%;max-width:400px;position:relative;animation:fadeUp .5s ease both}
@@ -303,6 +389,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <input class="login-input" type="email" id="loginEmail" placeholder="adresa@email.com" autocomplete="email">
     <div class="login-error" id="loginError"></div>
     <button class="login-btn" onclick="doLogin()">Intră în cont →</button>
+     <button class="login-btn" onclick="createDemoAccount()" style="background:white;color:#0D1A3A;margin-top:8px">
+  Creează cont demo
+</button>
     <div class="login-footer">🔒 Acces securizat prin email</div>
   </div>
 </div>
@@ -1147,7 +1236,23 @@ function renderAdminTable() {
 // CSV UPLOAD
 // ═══════════════════════════════════════════════════════
 function loadCSVText(text) {
-  const rows = parseCSV(text);
+  let rows = parseCSV(text);
+
+  const demoAccounts = getDemoAccounts();
+
+  if (demoAccounts.length) {
+    const existingEmails = new Set(
+      rows.map(r => (r.Email || '').toLowerCase())
+    );
+
+    demoAccounts.forEach(acc => {
+      const email = (acc.Email || '').toLowerCase();
+      if (email && !existingEmails.has(email)) {
+        rows.push(acc);
+      }
+    });
+  }
+
   if (!rows.length) { alert('CSV-ul nu conține date valide.'); return; }
   const processed = processAmbassadors(rows);
   STATE.ambassadors  = processed;
