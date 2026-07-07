@@ -289,28 +289,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </style>
 </head>
 <body>
-async function loadSupabaseData() {
 
-  const { data, error } =
-    await supabaseClient
-      .from('ambassadors')
-      .select('*');
-
-  if (error) {
-    console.error(error);
-    throw error;
-  }
-
-  const processed =
-    processAmbassadors(data);
-
-  STATE.ambassadors = processed;
-  STATE.universities =
-    buildUniData(processed);
-
-  STATE.faculties =
-    buildFacData(processed);
-}
 <!-- ══════════════════════════════════════
      LOGIN
 ══════════════════════════════════════ -->
@@ -575,7 +554,7 @@ const ADMIN_EMAILS = ['admin@george.ro', 'george.admin@bcr.ro'];
 'https://vkrddsowcvryoyvhshmp.supabase.co';
 
 const SUPABASE_KEY =
-'PUNE_AICI_CHEIA_ANON';
+'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrcmRkc293Y3ZyeW95dmhzaG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MDY0OTQsImV4cCI6MjA5ODk4MjQ5NH0.Wx-lgMQkP-FI-bgZqj2LlDM5-pOxH9E1hjbR8nCtuCk';
 
 const supabaseClient =
 window.supabase.createClient(
@@ -661,7 +640,7 @@ function parseCSV(text) {
 function processAmbassadors(rows) {
   // Arhitectura: allRows = toti, leaderboardRows = doar Permanenti
   const allRows         = rows;
-  const leaderboardRows = rows.filter(a => (a.Tip||'').trim() === 'Permanent');
+  const leaderboardRows = rows.filter(a => (a.Tip||'').trim() === 'Ambasador');
 
   // PASS 1: initializare campuri + XP de baza pentru TOTI
   allRows.forEach((a, i) => {
@@ -768,7 +747,28 @@ const STATE = {
   isAdmin: false,
   me: null,
 };
+async function loadSupabaseData() {
 
+  const { data, error } =
+    await supabaseClient
+      .from('ambassadors')
+      .select('*');
+
+  if (error) {
+    console.error(error);
+    throw error;
+  }
+
+  const processed =
+    processAmbassadors(data);
+
+  STATE.ambassadors = processed;
+  STATE.universities =
+    buildUniData(processed);
+
+  STATE.faculties =
+    buildFacData(processed);
+}
 const fmt = n => Number(n).toLocaleString('ro-RO');
 const ini = name => (name||'?').charAt(0).toUpperCase();
 
@@ -1254,8 +1254,8 @@ tickTimers();
 // ═══════════════════════════════════════════════════════
 // BOOT — încarcă automat ambassadors.csv
 // ═══════════════════════════════════════════════════════
-
+://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </script>
-   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
 </body>
 </html>
