@@ -1,0 +1,9 @@
+ID_Ambasador,Nickname,Email,Tip,Status,Universitate,Facultate,An_Studiu,CJ_Publisher_ID,Link_Unic,Data_Inscriere,Ambasador_Permanent_Supervizor,Total_Conturi_Generate,Total_XP,Level
+AFFI01 SL,Dessi,dessito@gmail.com,Ambasador,Activ,UBB Cluj-Napoca,FSEGA,3,CJ-PUB-001,https://bcr.ro/george?ref=AMB001,6/1/2026,,47,2350,Ambassador
+AFFI02 SL,Mari,mari@gmail.com,Ambasador,Activ,ASE Bucuresti,CSIE,2,CJ-PUB-002,https://bcr.ro/george?ref=AMB002,6/1/2026,,38,1980,Ambassador
+AFFI03 SL,Sori,sori@gmail.com,George Friend,Activ,UBB Cluj-Napoca,Drept,2,CJ-PUB-003,https://bcr.ro/george?ref=AMB003,6/10/2026,AFFI01 SL,37,1820,Affiliate
+AFFI04 SL,Andre,andre@gmail.com,George Friend,Activ,Politehnica Bucuresti,Electronica,3,CJ-PUB-004,https://bcr.ro/george?ref=AMB004,6/12/2026,AFFI02 SL,36,1540,Affiliate
+AFFI05 SL,Laura,laura@gmail.com,Ambasador,Activ,UBB Cluj-Napoca,Psihologie,1,CJ-PUB-005,https://bcr.ro/george?ref=AMB005,6/15/2026,,14,380,Affiliate
+AFFI06 SL,Georgi,georgi@gmail.com,George Friend,Activ,UBB Cluj-Napoca,Psihologie,1,CJ-PUB-006,https://bcr.ro/george?ref=AMB006,6/15/2026,AFFI01 SL,30,1380,Affiliate
+AFFI06 SL,Beti,beti@gmail.com,George Friend,Activ,UBB Cluj-Napoca,Psihologie,1,CJ-PUB-007,https://bcr.ro/george?ref=AMB007,6/15/2026,AFFI01 SL,26,1280,Affiliate
+AFFI07 SL,Mdalina,mada@gmail.com,George Friend,Activ,UBB Cluj-Napoca,Psihologie,1,CJ-PUB-007,https://bcr.ro/george?ref=AMB007,6/15/2026,AFFI01 SL,26,1280,Affiliate
