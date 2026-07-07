@@ -289,7 +289,28 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </style>
 </head>
 <body>
+async function loadSupabaseData() {
 
+  const { data, error } =
+    await supabaseClient
+      .from('ambassadors')
+      .select('*');
+
+  if (error) {
+    console.error(error);
+    throw error;
+  }
+
+  const processed =
+    processAmbassadors(data);
+
+  STATE.ambassadors = processed;
+  STATE.universities =
+    buildUniData(processed);
+
+  STATE.faculties =
+    buildFacData(processed);
+}
 <!-- ══════════════════════════════════════
      LOGIN
 ══════════════════════════════════════ -->
@@ -550,6 +571,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 // CONSTANTS
 // ═══════════════════════════════════════════════════════
 const ADMIN_EMAILS = ['admin@george.ro', 'george.admin@bcr.ro'];
+   const SUPABASE_URL =
+'https://vkrddsowcvryoyvhshmp.supabase.co';
+
+const SUPABASE_KEY =
+'PUNE_AICI_CHEIA_ANON';
+
+const supabaseClient =
+window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 const AVATAR_COLORS = ['#1A3FCB','#7C3AED','#DC2626','#D97706','#059669',
   '#0891B2','#DB2777','#65A30D','#EA580C','#6D28D9','#0369A1','#9333EA',
   '#B45309','#15803D','#C026D3','#BE123C','#0E7490','#4338CA'];
@@ -1198,32 +1230,32 @@ function tickTimers() {
 }
 setInterval(tickTimers, 1000);
 tickTimers();
+(async function boot() {
 
+  try {
+
+    await loadSupabaseData();
+
+    console.log(
+      'Supabase loaded:',
+      STATE.ambassadors.length
+    );
+
+  } catch (err) {
+
+    console.error(
+      'Supabase failed:',
+      err
+    );
+
+  }
+
+})();
 // ═══════════════════════════════════════════════════════
 // BOOT — încarcă automat ambassadors.csv
 // ═══════════════════════════════════════════════════════
-(async function bootLoadCSV() {
-  // Afișează un mesaj de loading pe ecranul de login
-  const loginSub = document.querySelector('.login-sub');
-  const originalSubText = loginSub ? loginSub.textContent : '';
-  if (loginSub) loginSub.textContent = '⏳ Se încarcă datele...';
 
-  try {
-    const res = await fetch('ambassadors.csv?t=' + Date.now()); // cache-bust
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    const text = await res.text();
-    if (!text || !text.trim()) throw new Error('Fișierul ambassadors.csv este gol.');
-    loadCSVText(text);
-    if (loginSub) loginSub.textContent = originalSubText;
-  } catch (err) {
-    console.error('[Boot] Nu s-a putut încărca ambassadors.csv:', err);
-    if (loginSub) {
-      loginSub.innerHTML = `⚠️ Eroare la încărcarea datelor: <strong>${err.message}</strong><br>
-        Asigură-te că <code>ambassadors.csv</code> există în același director cu <code>index.html</code>.`;
-      loginSub.style.color = '#FCA5A5';
-    }
-  }
-})();
 </script>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>
