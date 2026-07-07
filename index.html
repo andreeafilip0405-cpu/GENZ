@@ -625,15 +625,24 @@ function parseCSV(text) {
     return obj;
   }).filter(r => r.ID_Ambasador && r.ID_Ambasador.length > 0);
 }
+function isMainAmbassador(tip) {
+  const v = (tip || '').trim().toLowerCase();
+
+  // Acceptăm ambele variante, ca să meargă și dacă în CSV scrie "Ambasador",
+  // și dacă pe viitor vreți să folosiți "Permanent".
+  return v === 'ambasador' || v === 'permanent';
+}
 
 function processAmbassadors(rows) {
-  // Arhitectura: allRows = toti, leaderboardRows = doar Permanenti
-  const allRows         = rows;
-  const leaderboardRows = rows.filter(a => (a.Tip||'').trim() === 'Permanent');
+  // Arhitectură:
+  // allRows = toți oamenii din CSV
+  // leaderboardRows = doar ambasadorii principali, adică cei cu Tip = Ambasador / Permanent
+  const allRows = rows;
+  const leaderboardRows = rows.filter(a => isMainAmbassador(a.Tip));
 
-  // PASS 1: initializare campuri + XP de baza pentru TOTI
+  // PASS 1: inițializare câmpuri + XP de bază pentru toți
   allRows.forEach((a, i) => {
-    a._isPermanent      = (a.Tip||'').trim() === 'Permanent';
+    a._isPermanent      = isMainAmbassador(a.Tip);
     a._color            = AVATAR_COLORS[i % AVATAR_COLORS.length];
     a._xpBase           = calcAccountsXP(a.Total_Conturi_Generate);
     a._referrals        = 0;
@@ -644,58 +653,70 @@ function processAmbassadors(rows) {
     a._affiliateXP      = 0;
     a._xp               = a._xpBase;
     a._rank             = null;
+    a._totalConturi     = parseInt(a.Total_Conturi_Generate) || 0;
   });
 
-  // PASS 2: calculeaza reteaua fiecarui Permanent
-  // Orice rand cu Ambasador_Permanent_Supervizor setat contribuie la supervizor
+  // PASS 2: calculăm rețeaua fiecărui ambasador principal
+  // Orice rând cu Ambasador_Permanent_Supervizor setat contribuie la supervizor
   allRows.forEach(a => {
-    const supId = (a.Ambasador_Permanent_Supervizor||'').trim();
+    const supId = (a.Ambasador_Permanent_Supervizor || '').trim();
     if (!supId) return;
-    const sup = allRows.find(s => (s.ID_Ambasador||'').trim() === supId);
+
+    const sup = allRows.find(s => (s.ID_Ambasador || '').trim() === supId);
     if (!sup) return;
+
     sup._referrals        += 1;
-    // Referral XP (+500) doar daca cel recrutat este si el Permanent
+
+    // Referral XP: +500 doar dacă cel recrutat este și el ambasador principal
     sup._refXP            += a._isPermanent ? 500 : 0;
-    // Retea afiliati: contribuie toti (inclusiv Temporari)
+
+    // Rețea afiliați: contribuie toți cei supervizați
     sup._affiliateCount   += 1;
     sup._affiliateConturi += parseInt(a.Total_Conturi_Generate) || 0;
     sup._affiliateXP      += a._xpBase;
   });
 
-  // PASS 3: XP total Permanenti = propriu + refXP + affiliateXP
+  // PASS 3: XP total pentru ambasadorii principali
+  // XP = XP propriu + XP referrals + XP rețea
   leaderboardRows.forEach(a => {
-    a._totalConturi = (parseInt(a.Total_Conturi_Generate)||0) + a._affiliateConturi;
+    a._totalConturi = (parseInt(a.Total_Conturi_Generate) || 0) + a._affiliateConturi;
     a._xp = a._xpBase + a._refXP + a._affiliateXP;
   });
 
-  // Weekly top grower = Permanentul cu cele mai multe conturi totale
+  // Bonus challenge săptămânal:
+  // primește +100 XP ambasadorul principal cu cele mai multe conturi totale
   const weeklyTopId = leaderboardRows.length
     ? leaderboardRows.reduce((best, a) =>
         a._totalConturi > best._totalConturi ? a : best
       , leaderboardRows[0])?.ID_Ambasador
     : null;
+
   if (weeklyTopId) {
     const top = leaderboardRows.find(a => a.ID_Ambasador === weeklyTopId);
     if (top) top._xp += 100;
   }
 
-  // Temporarii: XP total = propriu (fara affiliate, fara weekly)
+  // George Friend / afiliați:
+  // XP total = XP propriu + eventual referral XP, fără rank și fără bonus weekly
   allRows.filter(a => !a._isPermanent).forEach(a => {
-    a._xp           = a._xpBase + a._refXP;
-    a._totalConturi = parseInt(a.Total_Conturi_Generate)||0;
+    a._xp = a._xpBase + a._refXP;
+    a._totalConturi = parseInt(a.Total_Conturi_Generate) || 0;
   });
 
-  // PASS 4: sort Permanenti, weekly rank bonuses, rank final
+  // PASS 4: sortăm ambasadorii principali, acordăm bonusurile de leaderboard și rank final
   leaderboardRows.sort((a, b) => b._xp - a._xp);
   assignWeeklyRankBonus(leaderboardRows);
   leaderboardRows.sort((a, b) => b._xp - a._xp);
-  leaderboardRows.forEach((a, i) => { a._rank = i + 1; });
+  leaderboardRows.forEach((a, i) => {
+    a._rank = i + 1;
+  });
 
-  processAmbassadors._allRows         = allRows;
+  processAmbassadors._allRows = allRows;
   processAmbassadors._leaderboardRows = leaderboardRows;
 
   return allRows;
 }
+
 
 function buildUniData(ambassadors) {
   // Use ALL rows for university stats (permanent + temporary)
