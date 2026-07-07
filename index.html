@@ -853,6 +853,33 @@ const ini = name => (name||'?').charAt(0).toUpperCase();
 // ═══════════════════════════════════════════════════════
 // LOGIN
 // ═══════════════════════════════════════════════════════
+   function getDemoAccounts() {
+  try {
+    return JSON.parse(
+      localStorage.getItem('demoAmbassadors') || '[]'
+    );
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveDemoAccount(account) {
+  const accounts = getDemoAccounts();
+
+  const exists = accounts.some(a =>
+    (a.Email || '').toLowerCase() ===
+    (account.Email || '').toLowerCase()
+  );
+
+  if (!exists) {
+    accounts.push(account);
+
+    localStorage.setItem(
+      'demoAmbassadors',
+      JSON.stringify(accounts)
+    );
+  }
+}
 function doLogin() {
   const emailEl = document.getElementById('loginEmail');
   const errEl   = document.getElementById('loginError');
